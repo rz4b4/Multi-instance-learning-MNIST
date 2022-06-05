@@ -26,7 +26,9 @@ class Mnist_MIL_Net(nn.Module):
         )
         
         self.linear = nn.Sequential(
-            nn.Linear(64 * 3 * 3, 1),
+            nn.Linear(64 * 3 * 3, 64),
+            nn.ReLU(inplace=True),
+            nn.Linear(64, 1),
             nn.Sigmoid()
         )
         

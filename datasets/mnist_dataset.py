@@ -5,12 +5,14 @@ import torchvision
 
 
 class MNIST_Dataset(data_utils.Dataset):
-    def __init__(self, mean_bag_size=10, std_bag_size=2, bag_count=1024, data_cache_dir='./datasets/cache/', mode='train') -> None:
+    def __init__(self, mean_bag_size=10, std_bag_size=2, bag_count=1024, data_cache_dir='./datasets/cache/', mode='train', random_seed=1) -> None:
+        np.random.seed(random_seed)
+        
         self.mean_bag_size = mean_bag_size
         self.std_bag_size = std_bag_size
         self.bag_count = bag_count
         self.mnist_data = torchvision.datasets.MNIST(data_cache_dir, download=True)
-        
+                
         assert mode in ['train', 'test', 'val'], "Dataset mode not supported. Available options: 'train', 'test', 'val'."
         
         if mode == 'train':

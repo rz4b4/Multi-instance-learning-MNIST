@@ -6,4 +6,6 @@ class Config():
     experiment_name = 'mnist_mil_1'
     
     train_bag_count = 2048
-    val_bag_count = 256
+    val_bag_count = 512
+    
+    dataset_random_seed = 13

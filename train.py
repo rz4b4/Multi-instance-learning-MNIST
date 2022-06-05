@@ -19,12 +19,14 @@ shutil.copyfile('./config.py', f'{experiment_dir}/config.py')
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-dataset = MNIST_Dataset(bag_count=config.train_bag_count, mode='train')
+dataset = MNIST_Dataset(bag_count=config.train_bag_count,
+                        mode='train', random_seed=config.dataset_random_seed)
 train_loader = data_utils.DataLoader(dataset,
                                      batch_size=1,
                                      shuffle=True)
 
-val_dataset = MNIST_Dataset(bag_count=config.val_bag_count, mode='val')
+val_dataset = MNIST_Dataset(bag_count=config.val_bag_count,
+                            mode='val', random_seed=config.dataset_random_seed)
 val_loader = data_utils.DataLoader(val_dataset,
                                    batch_size=1,
                                    shuffle=False)
@@ -39,6 +41,7 @@ optimizer = torch.optim.Adam(
 def loss_func(y, y_pred):
     return (y - y_pred) ** 2
 
+
 pos = 0
 neg = 0
 for _, label in train_loader:
@@ -47,7 +50,8 @@ for _, label in train_loader:
         pos += 1
     else:
         neg += 1
-print(f'The training set has {pos} positive examples and {neg} negative examples.')
+print(
+    f'The training set has {pos} positive examples and {neg} negative examples.')
 
 val_pos = 0
 val_neg = 0
@@ -57,7 +61,8 @@ for _, label in val_loader:
         val_pos += 1
     else:
         val_neg += 1
-print(f'The validation set has {val_pos} positive examples and {val_neg} negative examples.')
+print(
+    f'The validation set has {val_pos} positive examples and {val_neg} negative examples.')
 
 with open(f'{experiment_dir}/dataset_info.txt', mode='w') as f:
     text = f"""
@@ -85,6 +90,7 @@ for epoch_index in range(config.epoch_count):
 
     model.train()
     loss = 0
+    last_count = 0
     loader_len = len(train_loader)
     for count, (bag, label) in enumerate(tqdm(train_loader), start=1):
         bag = bag.transpose(0, 1)  # 1, bag_size, 28, 28 -> bag_size, 1, 28, 28
@@ -95,9 +101,10 @@ for epoch_index in range(config.epoch_count):
 
         epoch_acc += int(round(output.item()) == label.item())
         loss += loss_func(label, output)
-        
+
         if (count % config.batch_size == 0) or (count == loader_len):
-            epoch_loss += loss.item()
+            epoch_loss += loss.item() / (count - last_count)
+            last_count = count
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -115,6 +122,8 @@ for epoch_index in range(config.epoch_count):
             epoch_val_acc += int(round(output.item()) == label.item())
             loss = loss_func(label, output)
             epoch_validation_loss += loss.item()
+
+    epoch_validation_loss /= len(val_loader)
 
     epoch_acc /= len(train_loader)
     epoch_val_acc /= len(val_loader)
