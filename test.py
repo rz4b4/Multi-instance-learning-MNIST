@@ -34,9 +34,8 @@ model.eval()
 results_dir = os.path.join(experiment_dir, 'test/')
 if not os.path.exists(results_dir):
     os.mkdir(results_dir)
-
-for index in range(10):
-    bag, label = test_dataset[index]
+    
+def draw_results(bag, label, save_dir):
     bag_device = bag.to(device)
     bag_device = bag_device.unsqueeze(1)
     with torch.no_grad():
@@ -51,7 +50,11 @@ for index in range(10):
         plt.imshow(bag[i - 1], cmap=plt.get_cmap('gray'))
         plt.title(f'Output: {outputs[i - 1].item():.2f}')
 
-    plt.savefig(f'{results_dir}/example_{index}.png')
+    plt.savefig(save_dir)
+
+for index in range(10):
+    bag, label = test_dataset[index]
+    draw_results(bag, label, f'{results_dir}/example_{index}.png')
 
 accuracy = 0
 false_negative_example = None
@@ -97,39 +100,11 @@ false negative count: {false_negative_count}
 if false_positive_example is not None:
     bag, label = false_positive_example
     bag = bag.squeeze(1)
-    bag_device = bag.to(device)
-    bag_device = bag_device.unsqueeze(1)
-    with torch.no_grad():
-        outputs = model(bag_device).cpu()
-    print(outputs)
-    rows = 2
-    columns = 6
-    fig = plt.figure(figsize=(12, 5))
-    for i in range(1, len(bag) + 1):
-        img = bag[i - 1]
-        fig.add_subplot(rows, columns, i)
-        plt.imshow(bag[i - 1], cmap=plt.get_cmap('gray'))
-        plt.title(f'Output: {outputs[i - 1].item():.2f}')
-
-    plt.savefig(f'{results_dir}/false_positive_example.png')
+    draw_results(bag, label, f'{results_dir}/false_positive_example.png')
     
 if false_negative_example is not None:
     bag, label = false_negative_example
     bag = bag.squeeze(1)
-    bag_device = bag.to(device)
-    bag_device = bag_device.unsqueeze(1)
-    with torch.no_grad():
-        outputs = model(bag_device).cpu()
-    print(outputs)
-    rows = 2
-    columns = 6
-    fig = plt.figure(figsize=(12, 5))
-    for i in range(1, len(bag) + 1):
-        img = bag[i - 1]
-        fig.add_subplot(rows, columns, i)
-        plt.imshow(bag[i - 1], cmap=plt.get_cmap('gray'))
-        plt.title(f'Output: {outputs[i - 1].item():.2f}')
-
-    plt.savefig(f'{results_dir}/false_negative_example.png')
+    draw_results(bag, label, f'{results_dir}/false_negative_example.png')
 
 print(f'Results with all statistics were saved to {results_dir}')
